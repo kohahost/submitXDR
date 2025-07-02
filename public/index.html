@@ -1,16 +1,38 @@
-<!doctype html>
-<html lang="en" class="h-full">
-<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <!-- Developer By https://t.me/zendsdeveloper  -->
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PiMasterBot</title>
-    <script type="module" crossorigin src="/assets/zendsdev.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/zendsdev.css">
-  </head>
-  <body class="h-full">
-    <div id="root" class="h-full"></div>
-  </body>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit XDR</title>
+</head>
+<body>
+  <h1>Kirim Transaksi XDR</h1>
+  <form id="xdrForm">
+    <textarea id="xdr" placeholder="Tempel XDR di sini" rows="6" cols="60"></textarea><br />
+    <button type="submit">Kirim</button>
+  </form>
+  <pre id="result"></pre>
+
+  <script>
+    const form = document.getElementById('xdrForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const xdr = document.getElementById('xdr').value;
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ xdr }),
+        });
+        const data = await res.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        result.textContent = '❌ Gagal: ' + err.message;
+      }
+    });
+  </script>
+</body>
 </html>
