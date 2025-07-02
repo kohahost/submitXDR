@@ -1,20 +1,17 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { handler } from './submitXDR.js';
+import { handler } from './handler.js';
 
 const app = express();
-const PORT = 3001;
+const PORT = 3000;
 
 app.use(bodyParser.json());
 
 app.post('/submit', async (req, res) => {
-  const event = {
+  const result = await handler({
     httpMethod: 'POST',
     body: JSON.stringify(req.body)
-  };
-
-  const result = await handler(event);
-
+  });
   res.status(result.statusCode).set(result.headers).send(result.body);
 });
 
@@ -24,5 +21,5 @@ app.options('/submit', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server berjalan di http://202.10.36.84:${PORT}`);
+  console.log(`✅ Server berjalan di http://localhost:${PORT}/submit`);
 });
