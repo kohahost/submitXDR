@@ -1,7 +1,6 @@
 import { URLSearchParams } from 'url';
 import { ProxyAgent, request } from 'undici';
 
-// Daftar proxy berbayar
 const proxyList = [
   "https://bcd60f77c870ab96006e:6337aa71b03ff7e8@ip.proxynet.top:823",
   "https://bcd60f77c870ab96006e__cr.vg:6337aa71b03ff7e8@ip.proxynet.top:20000",
@@ -38,11 +37,8 @@ export async function handler(event) {
     return { statusCode: 400, headers, body: 'Bad request: XDR is empty' };
   }
 
-  console.log('Menerima XDR. Submit paralel...');
-
   const formData = new URLSearchParams();
   formData.append("tx", req.xdr);
-
   const horizonSubmitURL = "https://api.mainnet.minepi.com/transactions";
 
   const requestPromises = proxyList.map(proxyUrl => {
